@@ -1,0 +1,706 @@
+import http.server
+import socketserver
+import json
+import urllib.request
+import urllib.error
+import os
+import base64
+from io import BytesIO
+
+# Librería para generar el PDF
+from xhtml2pdf import pisa
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+img_filename = os.path.join(BASE_DIR, "posicion.png")
+img_base64 = ""
+
+if os.path.exists(img_filename):
+    with open(img_filename, "rb") as image_file:
+        encoded_string = base64.b64encode(image_file.read()).decode("utf-8")
+        img_base64 = f"data:image/png;base64,{encoded_string}"
+    print(f"[*] Imagen cargada e incrustada correctamente.")
+else:
+    print(f"[!] ADVERTENCIA: No se encontró la imagen '{img_filename}'.")
+
+HTML_CONTENT = f'''<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Evaluación de Calidad - Clinchados</title>
+    <style>
+        * {{ box-sizing: border-box; }}
+        body {{ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #A8A8A8; margin: 0; padding: 15px; color: #1F2F57; overflow-x: hidden; }}
+        .container {{ width: 100%; max-width: 950px; margin: auto; background: #FDFAF9; padding: 30px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); border-top: 8px solid #1F2F57; }}
+        h1, h2, h3 {{ color: #1F2F57; text-align: center; }}
+        .section {{ margin-bottom: 25px; padding: 15px; border: 1px solid #A8A8A8; border-radius: 8px; background-color: #FDFAF9; width: 100%; }}
+        .visual-panel {{ background-color: #FDFAF9; border: 2px solid #6091C3; }} 
+        label {{ display: block; margin-top: 10px; font-weight: bold; font-size: 0.85em; color: #1F2F57; }}
+        input[type="text"], input[type="number"], input[type="email"], input[type="password"], input[type="date"], select {{ 
+            width: 100%; padding: 8px; margin-top: 5px; border: 1px solid #A8A8A8; border-radius: 5px; font-size: 0.85em; background-color: #FDFAF9; color: #1F2F57;
+        }}
+        .instructions {{ background-color: #FDFAF9; border-left: 4px solid #1F2F57; border-top: 1px solid #A8A8A8; border-right: 1px solid #A8A8A8; border-bottom: 1px solid #A8A8A8; padding: 10px; font-size: 0.9em; margin-bottom: 15px; color: #1F2F57; }}
+        .flex-row {{ display: flex; gap: 15px; flex-wrap: wrap; align-items: flex-start; width: 100%; }}
+        .flex-col {{ flex: 1 1 250px; min-width: 0; }}
+        .calc-box {{ background: #A8A8A8; padding: 15px; border-radius: 5px; text-align: center; font-weight: bold; margin-top: 15px; border: 1px solid #1F2F57; color: #1F2F57; }}
+        .btn {{ background-color: #6091C3; color: #FDFAF9; border: none; padding: 12px 20px; font-size: 1em; cursor: pointer; border-radius: 5px; width: 100%; margin-top: 20px; font-weight: bold; transition: 0.3s; }}
+        .btn:hover {{ background-color: #1F2F57; color: #FDFAF9; }}
+        .advice {{ color: #1F2F57; font-weight: bold; text-align: center; font-size: 1.2em; padding: 20px; border: 3px solid #1F2F57; margin-top: 20px; background: #A8A8A8; display: none; text-transform: uppercase; }}
+        .ref-img {{ max-width: 100%; height: auto; display: block; margin-top: 8px; margin-bottom: 8px; border: 1px solid #A8A8A8; border-radius: 4px; background: #FDFAF9; padding: 4px; box-shadow: 1px 1px 4px rgba(0,0,0,0.2); }}
+        
+        .checkbox-group {{ display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }}
+        .checkbox-item {{ display: flex; align-items: center; gap: 8px; }}
+        .checkbox-item input[type="checkbox"] {{ width: auto; margin: 0; transform: scale(1.2); accent-color: #1F2F57; }}
+        .checkbox-item label {{ margin: 0; font-weight: normal; font-size: 0.9em; }}
+
+        .grid-table {{ width: 100%; border-collapse: collapse; margin-top: 10px; }}
+        .grid-table th, .grid-table td {{ border: 1px solid #A8A8A8; padding: 10px; }}
+        .grid-table th {{ background-color: #1F2F57; color: #FDFAF9; text-align: center; font-size: 0.9em; }}
+        .part-name {{ font-weight: bold; background-color: #E0E0E0; width: 25%; color: #1F2F57; font-size: 0.85em; }}
+        .id-container {{ display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }}
+        
+        .id-btn {{ 
+            background-color: #FDFAF9; border: 2px solid #A8A8A8; 
+            border-radius: 20px; padding: 6px 12px; cursor: pointer;
+            font-size: 0.75em; font-weight: bold; color: #1F2F57;
+            transition: all 0.2s ease-in-out;
+            user-select: none;
+        }}
+        .id-btn:hover {{ border-color: #1F2F57; }}
+        .id-btn.status-nok {{ background-color: #1F2F57; color: #FDFAF9; border-color: #1F2F57; transform: scale(1.05); }}
+        .id-btn.status-cok {{ background-color: #6091C3; color: #FDFAF9; border-color: #6091C3; transform: scale(1.05); }}
+        .nok-panel {{ border: 1px solid #6091C3; background-color: #FDFAF9; padding: 15px; border-radius: 5px; margin-top: 10px; width: 100%; }}
+
+        @media (max-width: 600px) {{
+            body {{ padding: 10px; }}
+            .container {{ padding: 15px; }}
+            .section {{ padding: 10px; }}
+            .flex-col {{ flex: 1 1 100%; }}
+            h1 {{ font-size: 1.5em; }}
+            .part-name {{ width: 100%; display: block; border-bottom: none; }}
+            .grid-table td {{ display: block; width: 100%; }}
+        }}
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Inspección de Matriz de Clinchado</h1>
+    
+    <form id="clinchadoForm">
+        <!-- SECCIÓN 1: Destinatarios -->
+        <div class="section">
+            <h2>1. Destinatarios del Reporte</h2>
+            <div class="instructions">
+                Selecciona las áreas a las que deseas enviar este informe (PDF).
+            </div>
+            <div class="flex-row">
+                <div class="flex-col">
+                    <label>Áreas predefinidas:</label>
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="area_lab" value="laboratorio@vw.com" class="dest-checkbox">
+                            <label for="area_lab">Laboratorio</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="area_sol" value="soldadura@vw.com" class="dest-checkbox">
+                            <label for="area_sol">Soldadura</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="area_oja" value="ojalateria@vw.com" class="dest-checkbox">
+                            <label for="area_oja">Ojalatería</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex-col">
+                    <label>Correo adicional / único (Opcional):</label>
+                    <input type="email" id="customEmail" placeholder="ejemplo@vw.com">
+                </div>
+            </div>
+        </div>
+
+        <!-- SECCIÓN 2 -->
+        <div class="section">
+            <h2>2. Información del Ensamble</h2>
+            <div class="flex-row">
+                <div class="flex-col"><label>Inspector / Operador:</label><input type="text" id="inspector" required placeholder="Ej. Juan Pérez"></div>
+                <div class="flex-col"><label>Fecha de Envío:</label><input type="date" id="fecha" required></div>
+            </div>
+            <div class="flex-row">
+                <div class="flex-col">
+                    <label>Automóvil Evaluado:</label>
+                    <select id="auto" required>
+                        <option value="" disabled selected>Selecciona un vehículo</option>
+                        <option value="Jetta">Jetta</option>
+                        <option value="Taos">Taos</option>
+                        <option value="Tiguan">Tiguan</option>
+                        <option value="Golf">Golf</option>
+                    </select>
+                </div>
+                <div class="flex-col">
+                    <label>Parte de la Carrocería:</label>
+                    <select id="parte" required>
+                        <option value="" disabled selected>Primero selecciona un vehículo</option>
+                    </select>
+                </div>
+            </div>
+            <div class="flex-row">
+                <div class="flex-col"><label>Veces que han regresado el informe:</label><input type="number" id="vecesRegresado" required min="0" value="0"></div>
+            </div>
+        </div>
+
+        <!-- SECCIÓN 3 -->
+        <div class="section">
+            <h2>3. Resumen de Puntos de Clinchado</h2>
+            <div class="flex-row">
+                <div class="flex-col"><label>Total de Clinchados Evaluados:</label><input type="number" id="totalClinchados" required min="1" value="10" oninput="calcularTotalesGenerales()"></div>
+                <div class="flex-col"><label>Clinchados NOK (Mal):</label><input type="number" id="nokCount" required min="0" value="0" oninput="calcularTotalesGenerales()"></div>
+                <div class="flex-col"><label>Clinchados COK (Condicionales):</label><input type="number" id="cokCount" required min="0" value="0" oninput="calcularTotalesGenerales()"></div>
+            </div>
+
+            <div class="calc-box">
+                <p>Clinchados OK (Sin errores): <span id="okVal" style="font-size:1.5em; color:#1F2F57;">10</span></p>
+                <p>Total de veces cortado el ensamble: <span id="totalCortesVal" style="font-size:1.2em; color:#1F2F57;">0</span></p>
+                <p>Porcentaje de Efectividad: <span id="porcentajeVal" style="font-size:1.2em; color:#1F2F57;">100.0%</span></p>
+            </div>
+        </div>
+
+        <!-- SECCIÓN 4 (Matriz o Paneles Manuales) -->
+        <div class="section" id="sec4Container" style="display: none;">
+            <h2>4. Verificado de Clinchados</h2>
+            <div id="nokContainer"></div>
+        </div>
+
+        <!-- SECCIÓN 5 -->
+        <div class="section visual-panel">
+            <h2>5. Verificación visual de clinchados</h2>
+            <div class="flex-row">
+                <div class="flex-col">
+                    <label>1. Punto de unión existente:</label>
+                    <select id="v_punto_union">
+                        <option>Inexistente (NOK)</option>
+                        <option selected>Existente (OK)</option>
+                    </select>
+                </div>
+                <div class="flex-col">
+                    <label>2. Posición: 
+                        {f'<img src="{img_base64}" class="ref-img">' if img_base64 else '<small style="color:#1F2F57;">[Falta imagen]</small>'}
+                    </label>
+                    <select id="v_posicion">
+                        <option>Desviación de posición mayor que la especificación (NOK)</option>
+                        <option selected>Según dibujo (OK)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="flex-row">
+                <div class="flex-col">
+                    <label>3. Cuello agrietado:</label>
+                    <select id="v_cuello">
+                        <option>Existente (NOK)</option>
+                        <option selected>Inexistente (OK)</option>
+                    </select>
+                </div>
+                <div class="flex-col">
+                    <label>4. Ruptura de materiales:</label>
+                    <select id="v_ruptura">
+                        <option>Existente (NOK)</option>
+                        <option selected>Inexistente (OK)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="flex-row">
+                <div class="flex-col">
+                    <label>5. Grietas en el Cuello (Interior):</label>
+                    <select id="v_grietas_int">
+                        <option>Existente (NOK)</option>
+                        <option selected>Inexistente (OK)</option>
+                    </select>
+                </div>
+                <div class="flex-col">
+                    <label>6. Muescas:</label>
+                    <select id="v_muescas">
+                        <option>La muesca se encuentra descentrada y tiene forma irregular (NOK)</option>
+                        <option selected>La muesca está centrada y es distinguible (OK)</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECCIÓN 6 -->
+        <div class="section">
+            <h2>6. Módulos</h2>
+            <div class="flex-row">
+                <div class="flex-col">
+                    <label>¿El punzón cumple con sus funciones?</label>
+                    <select id="mod_punzon">
+                        <option value="Si" selected>Sí</option>
+                        <option value="No">No</option>
+                    </select>
+                </div>
+                <div class="flex-col">
+                    <label>¿La matriz cumple con sus funciones?</label>
+                    <select id="mod_matriz">
+                        <option value="Si" selected>Sí</option>
+                        <option value="No">No</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <button type="submit" class="btn" id="btnSubmit">GENERAR Y ENVIAR REPORTE PDF</button>
+        <div id="feedbackContainer" class="advice"></div>
+    </form>
+</div>
+
+<script>
+    document.getElementById('fecha').valueAsDate = new Date();
+
+    const partesPorVehiculo = {{
+        "Jetta": ["Tapa trasera", "Tapa delantera"],
+        "Taos": ["Tapa trasera", "Tapa delantera"],
+        "Tiguan": ["Tapa trasera", "Tapa delantera", "Salpicadera izquierda", "Salpicadera derecha"],
+        "Golf": ["Tapa trasera", "Tapa delantera"]
+    }};
+
+    const matrizTiguanTapaTrasera = {{
+        "Refuerzo de bisagra derecha": ["P0002-B-1330-100", "P0002-B-1330-200", "P0002-B-1330-300", "P0002-B-1330-400", "P0002-B-1330-500", "P0002-B-1330-600", "P0002-B-1330-700"],
+        "Refuerzo de bisagra izquierda": ["P0001-A-1330-100", "P0001-A-1330-200", "P0001-A-1330-300", "P0001-A-1330-400", "P0001-A-1330-500", "P0001-A-1330-600", "P0001-A-1330-700"],
+        "Chapa de cierre": ["P0005-E-1330-100", "P0005-E-1330-200", "P0005-E-1330-300", "P0005-E-1330-400", "P0005-E-1330-500", "P0005-E-1330-700", "P0005-E-1330-800", "P0005-E-1330-900", "P0005-E-1330-1000", "P0005-E-1330-1100", "P0005-E-1330-1200", "P0005-E-1330-1300", "P0005-E-1330-1400"],
+        "Refuerzo lateral derecho": ["P0004-D-1330-100", "P0004-D-1330-200", "P0004-D-1330-300", "P0004-D-1330-400", "P0004-D-1330-600", "P0004-D-1330-700", "P0004-D-1330-800", "P0004-D-1330-900", "P0004-D-1330-1000", "P0004-D-1330-1100"],
+        "Refuerzo lateral izquierdo": ["P0003-C-1330-100", "P0003-C-1330-200", "P0003-C-1330-300", "P0003-C-1330-400", "P0003-C-1330-600", "P0003-C-1330-700", "P0003-C-1330-800", "P0003-C-1330-900", "P0003-C-1330-1000", "P0003-C-1330-1100"],
+        "Calavera izquierda": ["P001-A-1330-100", "P001-A-1330-200", "P001-A-1330-300", "P001-A-1330-400", "P001-A-1330-500", "P001-A-1330-600", "P001-A-1330-700", "P001-A-1330-800", "P001-A-1330-900"],
+        "Calavera derecha": ["P002-B-1330-100", "P002-B-1330-200", "P002-B-1330-300", "P002-B-1330-400", "P002-B-1330-500", "P002-B-1330-600", "P002-B-1330-700", "P002-B-1330-800", "P002-B-1330-900"]
+    }};
+
+    let modoMatrizActivo = false;
+
+    document.getElementById('auto').addEventListener('change', function() {{
+        const parteSelect = document.getElementById('parte');
+        parteSelect.innerHTML = '<option value="" disabled selected>Selecciona la parte de carrocería</option>';
+        const auto = this.value;
+        if(partesPorVehiculo[auto]) {{
+            partesPorVehiculo[auto].forEach(parte => {{
+                parteSelect.appendChild(new Option(parte, parte));
+            }});
+        }}
+        evaluarModoInterfaz();
+    }});
+
+    document.getElementById('parte').addEventListener('change', evaluarModoInterfaz);
+    document.getElementById('vecesRegresado').addEventListener('input', calcularTotalesGenerales);
+    document.getElementById('cokCount').addEventListener('input', calcularTotalesGenerales);
+    document.getElementById('nokCount').addEventListener('input', calcularTotalesGenerales);
+    document.getElementById('totalClinchados').addEventListener('input', calcularTotalesGenerales);
+
+    function evaluarModoInterfaz() {{
+        const auto = document.getElementById('auto').value;
+        const parte = document.getElementById('parte').value;
+        
+        const sec4 = document.getElementById('sec4Container');
+        const container = document.getElementById('nokContainer');
+        container.innerHTML = '';
+        
+        if (auto === "Tiguan" && parte === "Tapa trasera") {{
+            modoMatrizActivo = true;
+            sec4.style.display = 'block';
+            document.getElementById('totalClinchados').readOnly = true;
+            document.getElementById('nokCount').readOnly = true;
+            document.getElementById('cokCount').readOnly = true;
+            renderizarMatrizInteractiva(container);
+        }} else {{
+            modoMatrizActivo = false;
+            sec4.style.display = 'none';
+            document.getElementById('totalClinchados').readOnly = false;
+            document.getElementById('nokCount').readOnly = false;
+            document.getElementById('cokCount').readOnly = false;
+            calcularTotalesGenerales();
+        }}
+    }}
+
+    function renderizarMatrizInteractiva(container) {{
+        let htmlMatriz = `
+            <div class="instructions" style="background-color: #FDFAF9;">
+                <strong>Instrucciones:</strong> Toca los botones correspondientes a los IDs para marcar los errores encontrados.
+                <div style="margin-top: 8px;">
+                    <span style="display:inline-block; padding: 2px 10px; border: 2px solid #A8A8A8; border-radius: 12px; font-size: 0.85em;">⚪ OK</span>
+                    <span style="display:inline-block; padding: 2px 10px; margin-left: 8px; background: #1F2F57; color: white; border-radius: 12px; font-size: 0.85em;">🔵 NOK (Mal)</span>
+                    <span style="display:inline-block; padding: 2px 10px; margin-left: 8px; background: #6091C3; color: white; border-radius: 12px; font-size: 0.85em;">🟦 COK (Condicionado)</span>
+                </div>
+            </div>
+            <table class="grid-table">
+                <thead>
+                    <tr>
+                        <th>Sección (Partes)</th>
+                        <th>Identificadores de Clinchado (IDs)</th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+        
+        let totalPuntos = 0;
+
+        for (const [subparte, ids] of Object.entries(matrizTiguanTapaTrasera)) {{
+            totalPuntos += ids.length;
+            const botones = ids.map(id => `
+                <button type="button" class="id-btn status-ok" data-subparte="${{subparte}}" data-id="${{id}}">${{id}}</button>
+            `).join('');
+
+            htmlMatriz += `
+                <tr>
+                    <td class="part-name">${{subparte}}</td>
+                    <td><div class="id-container">${{botones}}</div></td>
+                </tr>
+            `;
+        }}
+        
+        htmlMatriz += `</tbody></table>`;
+        container.innerHTML = htmlMatriz;
+
+        document.getElementById('totalClinchados').value = totalPuntos;
+
+        const btns = container.querySelectorAll('.id-btn');
+        btns.forEach(btn => {{
+            btn.addEventListener('click', function() {{
+                if (this.classList.contains('status-ok')) {{
+                    this.classList.remove('status-ok');
+                    this.classList.add('status-nok'); 
+                }} else if (this.classList.contains('status-nok')) {{
+                    this.classList.remove('status-nok');
+                    this.classList.add('status-cok'); 
+                }} else {{
+                    this.classList.remove('status-cok');
+                    this.classList.add('status-ok'); 
+                }}
+                actualizarConteoDesdeMatriz();
+            }});
+        }});
+        
+        actualizarConteoDesdeMatriz();
+    }}
+
+    function actualizarConteoDesdeMatriz() {{
+        const nokBtns = document.querySelectorAll('.id-btn.status-nok').length;
+        const cokBtns = document.querySelectorAll('.id-btn.status-cok').length;
+        
+        document.getElementById('nokCount').value = nokBtns;
+        document.getElementById('cokCount').value = cokBtns;
+        
+        calcularTotalesGenerales();
+    }}
+
+    function calcularTotalesGenerales() {{
+        const total = parseInt(document.getElementById('totalClinchados').value) || 0;
+        const nok = parseInt(document.getElementById('nokCount').value) || 0;
+        const cok = parseInt(document.getElementById('cokCount').value) || 0;
+        const regresos = parseInt(document.getElementById('vecesRegresado').value) || 0;
+        
+        const ok = total - nok - cok;
+        document.getElementById('okVal').innerText = ok;
+        document.getElementById('totalCortesVal').innerText = regresos;
+
+        let porcentaje = 100;
+        if (total > 0) {{ porcentaje = (ok / total) * 100; }} else {{ porcentaje = 0; }}
+        
+        document.getElementById('porcentajeVal').innerText = porcentaje.toFixed(1) + '%';
+        
+        if (!modoMatrizActivo) {{ generarPanelesManuales(nok, cok); }}
+        
+        document.getElementById('feedbackContainer').style.display = 'none';
+    }}
+
+    function generarPanelesManuales(cantidadNOK, cantidadCOK) {{
+        const sec4 = document.getElementById('sec4Container');
+        const container = document.getElementById('nokContainer');
+        container.innerHTML = '';
+        
+        const totalPaneles = cantidadNOK + cantidadCOK;
+        
+        if(totalPaneles > 0) {{
+            sec4.style.display = 'block';
+            for(let i = 1; i <= cantidadNOK; i++) {{
+                const panel = document.createElement('div');
+                panel.className = 'nok-panel flex-row';
+                panel.style.backgroundColor = '#A8A8A8'; 
+                panel.style.borderColor = '#1F2F57';
+                panel.innerHTML = `
+                    <div class="flex-col">
+                        <label style="color:#1F2F57;">ID Pieza Evaluada #${{i}} (Mal - NOK):</label>
+                        <input type="text" class="manual-id-parte" required placeholder="Ingresar ID">
+                    </div>
+                    <div class="flex-col">
+                        <label style="color:#1F2F57;">Estado Asignado:</label>
+                        <input type="text" class="manual-estado" value="Mal (NOK)" readonly style="background-color: transparent; border: none; font-weight: bold; color: #1F2F57;">
+                    </div>
+                `;
+                container.appendChild(panel);
+            }}
+
+            for(let i = 1; i <= cantidadCOK; i++) {{
+                const panel = document.createElement('div');
+                panel.className = 'nok-panel flex-row';
+                panel.style.backgroundColor = '#FDFAF9'; 
+                panel.style.borderColor = '#6091C3';
+                panel.innerHTML = `
+                    <div class="flex-col">
+                        <label style="color:#1F2F57;">ID Pieza Evaluada #${{cantidadNOK + i}} (Condicionado - COK):</label>
+                        <input type="text" class="manual-id-parte" required placeholder="Ingresar ID">
+                    </div>
+                    <div class="flex-col">
+                        <label style="color:#1F2F57;">Estado Asignado:</label>
+                        <input type="text" class="manual-estado" value="Condicionado (COK)" readonly style="background-color: transparent; border: none; font-weight: bold; color: #1F2F57;">
+                    </div>
+                `;
+                container.appendChild(panel);
+            }}
+        }} else {{
+            sec4.style.display = 'none';
+        }}
+    }}
+
+    document.getElementById('clinchadoForm').addEventListener('submit', async function(e) {{
+        e.preventDefault();
+        
+        const checkboxes = document.querySelectorAll('.dest-checkbox:checked');
+        let supervisores = [];
+        checkboxes.forEach(cb => supervisores.push(cb.value));
+        
+        const customEmail = document.getElementById('customEmail').value.trim();
+        if (customEmail) {{ supervisores.push(customEmail); }}
+        
+        if (supervisores.length === 0) {{
+            alert("⚠️ Por favor, selecciona al menos un área de envío o ingresa un correo adicional.");
+            return;
+        }}
+
+        const btn = document.getElementById('btnSubmit');
+        btn.innerText = 'GENERANDO PDF Y ENVIANDO...';
+        btn.disabled = true;
+
+        const data = {{
+            supervisores: supervisores,
+            inspector: document.getElementById('inspector').value,
+            fecha: document.getElementById('fecha').value,
+            auto: document.getElementById('auto').value,
+            parte: document.getElementById('parte').value,
+            vecesRegresado: document.getElementById('vecesRegresado').value,
+            totalClinchados: document.getElementById('totalClinchados').value,
+            nokCount: document.getElementById('nokCount').value,
+            cokCount: document.getElementById('cokCount').value,
+            okCount: document.getElementById('okVal').innerText,
+            porcentaje: document.getElementById('porcentajeVal').innerText,
+            
+            v_punto_union: document.getElementById('v_punto_union').value,
+            v_posicion: document.getElementById('v_posicion').value,
+            v_cuello: document.getElementById('v_cuello').value,
+            v_ruptura: document.getElementById('v_ruptura').value,
+            v_grietas_int: document.getElementById('v_grietas_int').value,
+            v_muescas: document.getElementById('v_muescas').value,
+            mod_punzon: document.getElementById('mod_punzon').value,
+            mod_matriz: document.getElementById('mod_matriz').value
+        }};
+
+        try {{
+            const response = await fetch('/enviar_correo', {{ method: 'POST', headers: {{ 'Content-Type': 'application/json' }}, body: JSON.stringify(data) }});
+            const result = await response.json();
+            if(response.ok) {{
+                const fbDiv = document.getElementById('feedbackContainer');
+                fbDiv.style.display = 'block';
+                fbDiv.style.backgroundColor = result.bg_color;
+                fbDiv.innerHTML = result.feedback;
+                fbDiv.scrollIntoView({{ behavior: 'smooth' }});
+                alert('✅ Reporte PDF enviado exitosamente a: ' + supervisores.join(', '));
+                
+                document.getElementById('clinchadoForm').reset();
+                document.getElementById('fecha').valueAsDate = new Date();
+                evaluarModoInterfaz(); 
+            }} else {{ alert('❌ Error: ' + result.error); }}
+        }} catch (error) {{ alert('❌ Error de conexión.'); }}
+        btn.innerText = 'GENERAR Y ENVIAR REPORTE PDF';
+        btn.disabled = false;
+    }});
+</script>
+</body>
+</html>
+'''
+
+class ClinchadoHandler(http.server.SimpleHTTPRequestHandler):
+    def do_GET(self):
+        if self.path == '/':
+            self.send_response(200)
+            self.send_header('Content-type', 'text/html; charset=utf-8')
+            self.end_headers()
+            self.wfile.write(HTML_CONTENT.encode('utf-8'))
+        else:
+            super().do_GET()
+
+    def do_POST(self):
+        if self.path == '/enviar_correo':
+            length = int(self.headers['Content-Length'])
+            data = json.loads(self.rfile.read(length).decode('utf-8'))
+
+            fallo_modulo = data['mod_punzon'] == 'No' or data['mod_matriz'] == 'No'
+            fallo_visual = ('NOK' in data['v_punto_union'] or 
+                            'NOK' in data['v_posicion'] or 
+                            'NOK' in data['v_cuello'] or 
+                            'NOK' in data['v_ruptura'] or 
+                            'NOK' in data['v_grietas_int'] or
+                            'NOK' in data['v_muescas'])
+                            
+            nok_count = int(data.get('nokCount', 0))
+
+            if fallo_modulo or fallo_visual:
+                dictamen = "DESGASTE CRÍTICO / FUERA DE TOLERANCIA (CAMBIAR MATRIZ)"
+                bg_color = "#FADBD8" # Color rojizo suave para PDF
+            elif nok_count > 0:
+                dictamen = "DESGASTE INICIAL / PRECAUCIÓN (Aumentar frecuencia de inspección)"
+                bg_color = "#FCF3CF" # Amarillo suave para PDF
+            else:
+                dictamen = "CONDICIÓN ÓPTIMA / ACEPTABLE (Continuar Proceso)"
+                bg_color = "#D4EFDF" # Verde suave para PDF
+
+            try:
+                self.enviar_email(data, dictamen, bg_color)
+                self.send_response(200)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({
+                    "status": "ok", 
+                    "feedback": "Reporte PDF Generado y Enviado con éxito.",
+                    "bg_color": "#A8A8A8"
+                }).encode('utf-8'))
+            except Exception as e:
+                self.send_response(500)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({"error": str(e)}).encode('utf-8'))
+    
+    def enviar_email(self, data, dictamen, bg_color):
+        
+        API_KEY = os.environ.get("BREVO_API_KEY")
+        SENDER_EMAIL = "coreenvi399@gmail.com"
+        
+        lista_supervisores = data.get('supervisores', [])
+        if not lista_supervisores:
+            raise Exception("No se especificaron destinatarios.")
+            
+        to_payload = [{"email": email} for email in lista_supervisores]
+        
+        # 1. Calcular Inspección Visual (6/6)
+        visual_vars = [data.get('v_punto_union',''), data.get('v_posicion',''), data.get('v_cuello',''), 
+                       data.get('v_ruptura',''), data.get('v_grietas_int',''), data.get('v_muescas','')]
+        visual_ok = sum(1 for v in visual_vars if '(OK)' in v)
+
+        # 2. Calcular Inspección de Medios (2/2)
+        medios_vars = [data.get('mod_punzon',''), data.get('mod_matriz','')]
+        medios_ok = sum(1 for v in medios_vars if v == 'Si')
+
+        # 3. Creación del diseño interno del PDF
+        pdf_html = f'''
+        <html>
+        <head>
+            <style>
+                @page {{ size: letter; margin: 2cm; }}
+                body {{ font-family: Helvetica, sans-serif; color: #1F2F57; }}
+                h2 {{ color: #1F2F57; text-align: center; border-bottom: 2px solid #1F2F57; padding-bottom: 10px; }}
+                h3 {{ color: #1F2F57; font-size: 14px; margin-top: 20px; border-bottom: 1px solid #A8A8A8; padding-bottom: 5px; }}
+                table {{ width: 100%; border-collapse: collapse; margin-bottom: 15px; }}
+                th, td {{ border: 1px solid #A8A8A8; padding: 8px; font-size: 12px; text-align: left; }}
+                th {{ background-color: #1F2F57; color: white; text-align: center; }}
+                .bg-light {{ background-color: #F0F0F0; font-weight: bold; width: 40%; }}
+                .dictamen {{ margin-top: 30px; padding: 15px; text-align: center; border: 2px solid #1F2F57; font-weight: bold; font-size: 16px; background-color: {bg_color}; }}
+            </style>
+        </head>
+        <body>
+            <h2>Reporte Oficial de Calidad - Clinchados</h2>
+            
+            <h3>1. Información del Ensamble</h3>
+            <table>
+                <tr><td class="bg-light">Inspector (Operador):</td><td>{data['inspector']}</td></tr>
+                <tr><td class="bg-light">Fecha:</td><td>{data['fecha']}</td></tr>
+                <tr><td class="bg-light">Automóvil Evaluado:</td><td>{data['auto']}</td></tr>
+                <tr><td class="bg-light">Parte de la Carrocería:</td><td>{data['parte']}</td></tr>
+                <tr><td class="bg-light">Veces Regresado:</td><td>{data['vecesRegresado']}</td></tr>
+            </table>
+
+            <h3>2. Resumen de Puntos de Clinchados</h3>
+            <table>
+                <tr>
+                    <th>Total Evaluados</th><th>OK</th><th>COK</th><th>NOK</th><th>Efectividad</th>
+                </tr>
+                <tr style="text-align: center;">
+                    <td>{data['totalClinchados']}</td>
+                    <td>{data['okCount']}</td>
+                    <td>{data['cokCount']}</td>
+                    <td style="color: red; font-weight: bold;">{data['nokCount']}</td>
+                    <td>{data['porcentaje']}</td>
+                </tr>
+            </table>
+
+            <h3>3. Resumen de Inspecciones</h3>
+            <table>
+                <tr><td class="bg-light">Medición:</td><td>{data['totalClinchados']}</td></tr>
+                <tr><td class="bg-light">Inspección visual:</td><td>{visual_ok} / 6</td></tr>
+                <tr><td class="bg-light">Inspección de medios:</td><td>{medios_ok} / 2</td></tr>
+            </table>
+
+            <div class="dictamen">
+                {dictamen}
+            </div>
+        </body>
+        </html>
+        '''
+
+        # 4. Generar el PDF en la memoria del servidor
+        pdf_buffer = BytesIO()
+        pisa_status = pisa.CreatePDF(pdf_html, dest=pdf_buffer)
+        if pisa_status.err:
+            raise Exception("Error interno al intentar generar el archivo PDF.")
+        
+        pdf_base64 = base64.b64encode(pdf_buffer.getvalue()).decode('utf-8')
+
+        # 5. Cuerpo del correo (Ya no trae las tablas, solo un texto elegante indicando que abra el PDF)
+        email_html = f'''<html><body style="font-family: Arial, sans-serif; color: #1F2F57; padding: 20px; background-color: #FDFAF9;">
+            <h2 style="color: #6091C3;">Sistema de Inspección Volkswagen</h2>
+            <p>Estimado equipo,</p>
+            <p>Se ha generado un nuevo reporte de calidad oficial para la pieza <strong>{data['parte']}</strong> del vehículo <strong>{data['auto']}</strong>.</p>
+            <p>El inspector <strong>{data['inspector']}</strong> ha adjuntado el informe detallado en formato PDF a este correo.</p>
+            <br><hr style="border: 0; border-top: 1px solid #A8A8A8;"><br>
+            <p style="font-size: 0.85em; color: #A8A8A8;">Este es un correo generado automáticamente. Por favor revise el PDF adjunto.</p>
+        </body></html>'''
+
+        payload = {
+            "sender": {"email": SENDER_EMAIL, "name": "Inspección de Calidad VW"},
+            "to": to_payload,
+            "subject": f"Reporte PDF: {data['parte']} - {data['auto']} (Insp: {data['inspector']})",
+            "htmlContent": email_html,
+            "attachment": [
+                {
+                    "content": pdf_base64,
+                    "name": f"Reporte_{data['auto']}_{data['parte']}.pdf"
+                }
+            ]
+        }
+
+        req = urllib.request.Request('https://api.brevo.com/v3/smtp/email')
+        
+        if not API_KEY:
+            raise Exception("No se encontró la variable BREVO_API_KEY en Render. Revisa la pestaña 'Environment'.")
+            
+        req.add_header('api-key', API_KEY)
+        req.add_header('accept', 'application/json')
+        req.add_header('content-type', 'application/json')
+
+        try:
+            urllib.request.urlopen(req, json.dumps(payload).encode('utf-8'))
+        except urllib.error.URLError as e:
+            error_info = e.read().decode('utf-8') if hasattr(e, 'read') else str(e)
+            raise Exception(f"Fallo en API Brevo: {error_info}")
+
+if __name__ == '__main__':
+    PORT = int(os.environ.get("PORT", 8000))
+    print(f"Servidor iniciado en el puerto {PORT}")
+    
+    socketserver.ThreadingTCPServer.allow_reuse_address = True
+    
+    with socketserver.ThreadingTCPServer(("0.0.0.0", PORT), ClinchadoHandler) as httpd:
+        httpd.serve_forever()
