@@ -386,8 +386,8 @@ HTML_CONTENT = f'''<!DOCTYPE html>
                             <label for="area_sol">Soldadura</label>
                         </div>
                         <div class="checkbox-item">
-                            <input type="checkbox" id="area_oja" value="ojalateria@vw.com" class="dest-checkbox">
-                            <label for="area_oja">Ojalatería</label>
+                            <input type="checkbox" id="area_oja" value="israel.villarce@vw.com.mx" class="dest-checkbox">
+                            <label for="area_oja">Hojalatería</label>
                         </div>
                     </div>
                 </div>
