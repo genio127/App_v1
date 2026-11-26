@@ -698,7 +698,7 @@ class ClinchadoHandler(http.server.SimpleHTTPRequestHandler):
     
     def enviar_email(self, data, dictamen, bg_color):
         API_KEY = os.environ.get("BREVO_API_KEY")
-        SENDER_EMAIL = "hola110@gmail.com"
+        SENDER_EMAIL = "ulyorther@gmail.com"
         
         lista_supervisores = data.get('supervisores', [])
         if not lista_supervisores:
