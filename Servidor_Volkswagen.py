@@ -10,7 +10,6 @@ from xhtml2pdf import pisa
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-# Función mejorada para cargar múltiples imágenes en Base64
 def load_image_b64(filename):
     filepath = os.path.join(BASE_DIR, filename)
     if os.path.exists(filepath):
@@ -20,11 +19,274 @@ def load_image_b64(filename):
     print(f"[!] ADVERTENCIA: No se encontró la imagen '{filename}'.")
     return ""
 
-# Carga de las 4 imágenes del sistema
-img_posicion_base64 = load_image_b64("posicion.png")
 img_web_base64 = load_image_b64("logo_web.png")
 img_pdf_base64 = load_image_b64("logo_pdf.png")
 img_email_base64 = load_image_b64("logo_email.png")
+
+# ==============================================================================
+# CATÁLOGO COMPLETO DE VEHÍCULOS, PARTES Y PUNTOS DE CLINCHADO
+# ==============================================================================
+MATRICES_POR_VEHICULO = {
+    "Tiguan": {
+        "Tapa Trasera": {
+            "Refuerzo de bisagra izquierda": [
+                "P0001-A-1330-100", "P0001-A-1330-200", "P0001-A-1330-300",
+                "P0001-A-1330-400", "P0001-A-1330-500", "P0001-A-1330-600",
+                "P0001-A-1330-700"
+            ],
+            "Refuerzo de bisagra derecha": [
+                "P0002-B-1330-100", "P0002-B-1330-200", "P0002-B-1330-300",
+                "P0002-B-1330-400", "P0002-B-1330-500", "P0002-B-1330-600",
+                "P0002-B-1330-700"
+            ],
+            "Refuerzo lateral izquierdo": [
+                "P0003-C-1330-100", "P0003-C-1330-200", "P0003-C-1330-300",
+                "P0003-C-1330-400", "P0003-C-1330-600", "P0003-C-1330-700",
+                "P0003-C-1330-800", "P0003-C-1330-900", "P0003-C-1330-1000",
+                "P0003-C-1330-1100"
+            ],
+            "Refuerzo lateral derecho": [
+                "P0004-D-1330-100", "P0004-D-1330-200", "P0004-D-1330-300",
+                "P0004-D-1330-400", "P0004-D-1330-600", "P0004-D-1330-700",
+                "P0004-D-1330-800", "P0004-D-1330-900", "P0004-D-1330-1000",
+                "P0004-D-1330-1100"
+            ],
+            "Chapa de cierre": [
+                "P0005-E-1330-100", "P0005-E-1330-200", "P0005-E-1330-300",
+                "P0005-E-1330-400", "P0005-E-1330-500", "P0005-E-1330-700",
+                "P0005-E-1330-800", "P0005-E-1330-900", "P0005-E-1330-1000",
+                "P0005-E-1330-1100", "P0005-E-1330-1200", "P0005-E-1330-1300",
+                "P0005-E-1330-1400"
+            ],
+            "Calavera izquierda": [
+                "P001-A-1330-100", "P001-A-1330-200", "P001-A-1330-300",
+                "P001-A-1330-400", "P001-A-1330-500", "P001-A-1330-600",
+                "P001-A-1330-700", "P001-A-1330-800", "P001-A-1330-900"
+            ],
+            "Calavera derecha": [
+                "P002-B-1330-100", "P002-B-1330-200", "P002-B-1330-300",
+                "P002-B-1330-400", "P002-B-1330-500", "P002-B-1330-600",
+                "P002-B-1330-700", "P002-B-1330-800", "P002-B-1330-900"
+            ]
+        },
+        "Tapa Delantera": {
+            "Sección P0001A": [
+                "P0001A_1330_000100", "P0001A_1330_000200", "P0001A_1330_000400",
+                "P0001A_1330_000500", "P0001A_1330_000600"
+            ],
+            "Sección P0002B": [
+                "P0002B_1330_000100", "P0002B_1330_000200", "P0002B_1330_000400",
+                "P0002B_1330_000500", "P0002B_1330_000600"
+            ],
+            "Sección P0003C": [
+                "P0003C_1330_000100", "P0003C_1330_000200", "P0003C_1330_000300"
+            ],
+            "Sección P0004D": [
+                "P0004D_1330_000400", "P0004D_1330_000500", "P0004D_1330_000600"
+            ],
+            "Sección P0005E": [
+                "P0005E_1330_000700", "P0005E_1330_000800", "P0005E_1330_000900",
+                "P0005E_1330_001000", "P0005E_1330_001100"
+            ]
+        },
+        "Salpicadera Derecha": {
+            "Sección P0001_A": [
+                "P0001_A_1330_000200", "P0001_A_1330_000300", "P0001_A_1330_000400",
+                "P0001_A_1330_001100", "P0001_A_1330_001100"
+            ],
+            "Sección P0002_B": [
+                "P0002_B_1330_000100", "P0002_B_1330_000200", "P0002_B_1330_000300",
+                "P0002_B_1330_000400"
+            ]
+        },
+        "Salpicadera Izquierda": {
+            "Sección P0001_A": [
+                "P0001_A_1330_000100", "P0001_A_1330_000200", "P0001_A_1330_000300",
+                "P0001_A_1330_000400", "P0001_A_1330_001100"
+            ],
+            "Sección P0002_B": [
+                "P0002_B_1330_000100", "P0002_B_1330_000200", "P0002_B_1330_000300",
+                "P0002_B_1330_000400"
+            ]
+        }
+    },
+    "Golf": {
+        "Tapa Trasera": {
+            "Sección P0001-A (L)": [
+                "P0001-A-1330-001500 L", "P0001-A-1330-001600 L", "P0001-A-1330-001700 L",
+                "P0001-A-1330-001800 L", "P0001-A-1330-001900 L", "P0001-A-1330-002000 L",
+                "P0001-A-1330-002100 L"
+            ],
+            "Sección P0001-A (R)": [
+                "P0001-A-1330-001500 R", "P0001-A-1330-001600 R", "P0001-A-1330-001700 R",
+                "P0001-A-1330-001800 R", "P0001-A-1330-001900 R", "P0001-A-1330-002000 R",
+                "P0001-A-1330-002100 R"
+            ],
+            "Sección P0002-D (L)": [
+                "P0002-D-1330-00300 L", "P0002-D-1330-00400 L", "P0002-D-1330-00500 L",
+                "P0002-D-1330-00600 L", "P0002-D-1330-00700 L", "P0002-D-1330-00800 L",
+                "P0002-D-1330-00900 L", "P0002-D-1330-01000 L"
+            ],
+            "Sección P0002-D (R)": [
+                "P0002-D-1330-00300 R", "P0002-D-1330-00400 R", "P0002-D-1330-00500 R",
+                "P0002-D-1330-00600 R", "P0002-D-1330-00700 R", "P0002-D-1330-00800 R",
+                "P0002-D-1330-01000 R"
+            ],
+            "Sección P0003-C": [
+                "P0003-C-1330-001100", "P0003-C-1330-001200", "P0003-C-1330-001300",
+                "P0003-C-1330-001500 L", "P0003-C-1330-001600 R"
+            ]
+        },
+        "Tapa Delantera": {
+            "Sección P001-A": [
+                "P001-A-1330-0100", "P001-A-1330-0200", "P001-A-1330-1300",
+                "P001-A-1330-1400"
+            ],
+            "Sección P002-B": [
+                "P002-B-1330-0300", "P002-B-1330-0400", "P002-B-1330-1500",
+                "P002-B-1330-1600"
+            ],
+            "Sección P003-C": [
+                "P003-C-1330-0500", "P003-C-1330-0600", "P003-C-1330-1700"
+            ],
+            "Sección P004-D": [
+                "P004-D-1330-0700", "P004-D-1330-0800", "P004-D-1330-1800"
+            ]
+        },
+        "Salpicadera Derecha": {
+            "Sección P0001-A": [
+                "P0001-A-1330-00400", "P0001-A-1330-00500", "P0001-A-1330-00600"
+            ]
+        },
+        "Salpicadera Izquierda": {
+            "Sección P0001-A": [
+                "P0001-A-1330-00400", "P0001-A-1330-00500", "P0001-A-1330-00600"
+            ]
+        }
+    },
+    "Taos": {
+        "Tapa Trasera": {
+            "Sección P001-A": [
+                "P001-A-1330-1110", "P001-A-1330-1610", "P001-A-1330-2110",
+                "P001-A-1330-2210", "P001-A-1330-2610", "P001-A-1330-2810"
+            ],
+            "Sección P001-I": [
+                "P001-I-1330-1110", "P001-I-1330-1610", "P001-I-1330-2110",
+                "P001-I-1330-2210", "P001-I-1330-2610", "P001-I-1330-2810"
+            ],
+            "Sección P002-C": [
+                "P002-C-1330-110", "P002-C-1330-210", "P002-C-1330-310",
+                "P002-C-1330-610", "P002-C-1330-710", "P002-C-1330-810",
+                "P002-C-1330-910", "P002-C-1330-1010", "P002-C-1330-1110"
+            ],
+            "Sección P002-N": [
+                "P002-N-1330-110", "P002-N-1330-210", "P002-N-1330-310",
+                "P002-N-1330-610", "P002-N-1330-710", "P002-N-1330-810",
+                "P002-N-1330-910", "P002-N-1330-1010", "P002-N-1330-1110"
+            ],
+            "Sección P003-E": [
+                "P003-E-1330-110", "P003-E-1330-210", "P003-E-1330-310",
+                "P003-E-1330-410", "P003-E-1330-510"
+            ],
+            "Sección P004-F": [
+                "P004-F-1330-110", "P004-F-1330-210", "P004-F-1330-310",
+                "P004-F-1330-410", "P004-F-1330-510"
+            ]
+        }
+    },
+    "Jetta": {
+        "Tapa Trasera": {
+            "Sección P0001-A (Bloque 1)": [
+                "P0001-A-1330-000100", "P0001-A-1330-000200", "P0001-A-1330-000300",
+                "P0001-A-1330-000400", "P0001-A-1330-000500", "P0001-A-1330-000600"
+            ],
+            "Sección P0002-B (Bloque 1)": [
+                "P0002-B-1330-000100", "P0002-B-1330-000200", "P0002-B-1330-000300",
+                "P0002-B-1330-000400", "P0002-B-1330-000500"
+            ],
+            "Sección P0003-C": [
+                "P0003-C-1330-000100", "P0003-C-1330-000200", "P0003-C-1330-000300",
+                "P0003-C-1330-000400", "P0003-C-1330-000500"
+            ],
+            "Sección P0004-D": [
+                "P0004-D-1330-000100", "P0004-D-1330-000200", "P0004-D-1330-000300",
+                "P0004-D-1330-000400"
+            ],
+            "Sección P0005-E": [
+                "P0005-E-1330-000100", "P0005-E-1330-000200", "P0005-E-1330-000300",
+                "P0005-E-1330-000400"
+            ],
+            "Sección P0006-F": [
+                "P0006-F-1330-000100", "P0006-F-1330-000200", "P0006-F-1330-000300",
+                "P0006-F-1330-000400"
+            ],
+            "Sección P0007-G": [
+                "P0007-G-1330-000100", "P0007-G-1330-000200", "P0007-G-1330-000300",
+                "P0007-G-1330-000400"
+            ],
+            "Sección P0008-H": [
+                "P0008-H-1330-000100", "P0008-H-1330-000200"
+            ],
+            "Sección P0009-I": [
+                "P0009-I-1330-000100", "P0009-I-1330-000200"
+            ],
+            "Sección P0001-A (Serie 000100-002500)": [
+                "P0001-A-1330-000100", "P0001-A-1330-000200", "P0001-A-1330-000300",
+                "P0001-A-1330-000400", "P0001-A-1330-000500", "P0001-A-1330-000600",
+                "P0001-A-1330-000700", "P0001-A-1330-000800", "P0001-A-1330-000900",
+                "P0001-A-1330-001000", "P0001-A-1330-001100", "P0001-A-1330-001200",
+                "P0001-A-1330-001300", "P0001-A-1330-001400", "P0001-A-1330-001500",
+                "P0001-A-1330-001600", "P0001-A-1330-001700", "P0001-A-1330-001800",
+                "P0001-A-1330-001900", "P0001-A-1330-002000", "P0001-A-1330-002100",
+                "P0001-A-1330-002200", "P0001-A-1330-002300", "P0001-A-1330-002400",
+                "P0001-A-1330-002500"
+            ],
+            "Sección P0002-B (Serie 000100-001600)": [
+                "P0002-B-1330-000100", "P0002-B-1330-000200", "P0002-B-1330-000300",
+                "P0002-B-1330-000400", "P0002-B-1330-000500", "P0002-B-1330-000600",
+                "P0002-B-1330-000700", "P0002-B-1330-000800", "P0002-B-1330-000900",
+                "P0002-B-1330-001000", "P0002-B-1330-001100", "P0002-B-1330-001200",
+                "P0002-B-1330-001300", "P0002-B-1330-001400", "P0002-B-1330-001500",
+                "P0002-B-1330-001600"
+            ],
+            "Sección P-P001-A": [
+                "P-P001-A-1330-001100", "P-P001-A-1330-001200", "P-P001-A-1330-001300",
+                "P-P001-A-1330-001400", "P-P001-A-1330-001500", "P-P001-A-1330-001600",
+                "P-P001-A-1330-001700", "P-P001-A-1330-001800", "P-P001-A-1330-001900",
+                "P-P001-A-1330-002000"
+            ],
+            "Sección P-P002-B": [
+                "P-P002-B-1330-001100", "P-P002-B-1330-001200", "P-P002-B-1330-001300"
+            ]
+        },
+        "Tapa Delantera": {
+            "Sección P001-A": [
+                "P001-A-1330-0100", "P001-A-1330-0200", "P001-A-1330-0300",
+                "P001-A-1330-0400", "P001-A-1330-0500"
+            ],
+            "Sección P002-B": [
+                "P002-B-1330-0100", "P002-B-1330-0200", "P002-B-1330-0300",
+                "P002-B-1330-0400", "P002-B-1330-0500"
+            ],
+            "Sección P003-C": [
+                "P003-C-1330-0100", "P003-C-1330-0200", "P003-C-1330-0300",
+                "P003-C-1330-0400", "P003-C-1330-0500", "P003-C-1330-0600",
+                "P003-C-1330-0700", "P003-C-1330-0800"
+            ],
+            "Sección P004-D": [
+                "P004-D-1330-0100", "P004-D-1330-0200", "P004-D-1330-0300"
+            ],
+            "Sección P005-E": [
+                "P005-E-1330-0100", "P005-E-1330-0200", "P005-E-1330-0300"
+            ],
+            "Sección P006-F": [
+                "P006-F-1330-0100", "P006-F-1330-0200"
+            ]
+        }
+    }
+}
+
+MATRICES_JSON = json.dumps(MATRICES_POR_VEHICULO, ensure_ascii=False)
 
 HTML_CONTENT = f'''<!DOCTYPE html>
 <html lang="es">
@@ -40,25 +302,24 @@ HTML_CONTENT = f'''<!DOCTYPE html>
         .header-logo img {{ max-width: 250px; height: auto; }}
         h1, h2, h3 {{ color: #1F2F57; text-align: center; }}
         .section {{ margin-bottom: 25px; padding: 15px; border: 1px solid #A8A8A8; border-radius: 8px; background-color: #FDFAF9; width: 100%; }}
-        .visual-panel {{ background-color: #FDFAF9; border: 2px solid #6091C3; }} 
         label {{ display: block; margin-top: 10px; font-weight: bold; font-size: 0.85em; color: #1F2F57; }}
-        input[type="text"], input[type="number"], input[type="email"], input[type="password"], input[type="date"], select {{ 
+        input[type="text"], input[type="number"], input[type="email"], input[type="date"], select {{ 
             width: 100%; padding: 8px; margin-top: 5px; border: 1px solid #A8A8A8; border-radius: 5px; font-size: 0.85em; background-color: #FDFAF9; color: #1F2F57;
         }}
         .instructions {{ background-color: #FDFAF9; border-left: 4px solid #1F2F57; border-top: 1px solid #A8A8A8; border-right: 1px solid #A8A8A8; border-bottom: 1px solid #A8A8A8; padding: 10px; font-size: 0.9em; margin-bottom: 15px; color: #1F2F57; }}
         .flex-row {{ display: flex; gap: 15px; flex-wrap: wrap; align-items: flex-start; width: 100%; }}
         .flex-col {{ flex: 1 1 250px; min-width: 0; }}
-        .calc-box {{ background: #A8A8A8; padding: 15px; border-radius: 5px; text-align: center; font-weight: bold; margin-top: 15px; border: 1px solid #1F2F57; color: #1F2F57; }}
         .btn {{ background-color: #6091C3; color: #FDFAF9; border: none; padding: 12px 20px; font-size: 1em; cursor: pointer; border-radius: 5px; width: 100%; margin-top: 20px; font-weight: bold; transition: 0.3s; }}
         .btn:hover {{ background-color: #1F2F57; color: #FDFAF9; }}
         .advice {{ color: #1F2F57; font-weight: bold; text-align: center; font-size: 1.2em; padding: 20px; border: 3px solid #1F2F57; margin-top: 20px; background: #A8A8A8; display: none; text-transform: uppercase; }}
-        .ref-img {{ max-width: 100%; height: auto; display: block; margin-top: 8px; margin-bottom: 8px; border: 1px solid #A8A8A8; border-radius: 4px; background: #FDFAF9; padding: 4px; box-shadow: 1px 1px 4px rgba(0,0,0,0.2); }}
         
         .checkbox-group {{ display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }}
         .checkbox-item {{ display: flex; align-items: center; gap: 8px; }}
         .checkbox-item input[type="checkbox"] {{ width: auto; margin: 0; transform: scale(1.2); accent-color: #1F2F57; }}
         .checkbox-item label {{ margin: 0; font-weight: normal; font-size: 0.9em; }}
 
+        .matriz-wrapper {{ margin-top: 18px; display: none; }}
+        .status-bar {{ display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px; background-color: #E0E0E0; padding: 10px 14px; border-radius: 6px; border: 1px solid #1F2F57; margin-bottom: 12px; font-size: 0.85em; font-weight: bold; color: #1F2F57; }}
         .grid-table {{ width: 100%; border-collapse: collapse; margin-top: 10px; }}
         .grid-table th, .grid-table td {{ border: 1px solid #A8A8A8; padding: 10px; }}
         .grid-table th {{ background-color: #1F2F57; color: #FDFAF9; text-align: center; font-size: 0.9em; }}
@@ -66,16 +327,24 @@ HTML_CONTENT = f'''<!DOCTYPE html>
         .id-container {{ display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }}
         
         .id-btn {{ 
-            background-color: #FDFAF9; border: 2px solid #A8A8A8; 
             border-radius: 20px; padding: 6px 12px; cursor: pointer;
-            font-size: 0.75em; font-weight: bold; color: #1F2F57;
+            font-size: 0.75em; font-weight: bold;
             transition: all 0.2s ease-in-out;
             user-select: none;
         }}
-        .id-btn:hover {{ border-color: #1F2F57; }}
-        .id-btn.status-nok {{ background-color: #1F2F57; color: #FDFAF9; border-color: #1F2F57; transform: scale(1.05); }}
-        .id-btn.status-cok {{ background-color: #6091C3; color: #FDFAF9; border-color: #6091C3; transform: scale(1.05); }}
-        .nok-panel {{ border: 1px solid #6091C3; background-color: #FDFAF9; padding: 15px; border-radius: 5px; margin-top: 10px; width: 100%; }}
+        .id-btn.selected {{ 
+            background-color: #1F2F57; color: #FDFAF9; border: 2px solid #1F2F57;
+        }}
+        .id-btn.selected:hover {{ 
+            background-color: #6091C3; border-color: #6091C3;
+        }}
+        .id-btn.deselected {{ 
+            background-color: #FDFAF9; color: #7A7A7A; border: 2px dashed #A8A8A8;
+            text-decoration: line-through;
+        }}
+        .id-btn.deselected:hover {{ 
+            border-color: #1F2F57; color: #1F2F57;
+        }}
 
         @media (max-width: 600px) {{
             body {{ padding: 10px; }}
@@ -91,7 +360,6 @@ HTML_CONTENT = f'''<!DOCTYPE html>
 <body>
 
 <div class="container">
-    <!-- LOGO WEB AQUÍ -->
     <div class="header-logo">
         {f'<img src="{img_web_base64}">' if img_web_base64 else ''}
     </div>
@@ -119,7 +387,7 @@ HTML_CONTENT = f'''<!DOCTYPE html>
                         </div>
                         <div class="checkbox-item">
                             <input type="checkbox" id="area_oja" value="ojalateria@vw.com" class="dest-checkbox">
-                            <label for="area_oja">Hojalatería</label>
+                            <label for="area_oja">Ojalatería</label>
                         </div>
                     </div>
                 </div>
@@ -130,7 +398,7 @@ HTML_CONTENT = f'''<!DOCTYPE html>
             </div>
         </div>
 
-        <!-- SECCIÓN 2 -->
+        <!-- SECCIÓN 2: Información del Ensamble -->
         <div class="section">
             <h2>2. Información del Ensamble</h2>
             <div class="flex-row">
@@ -138,14 +406,22 @@ HTML_CONTENT = f'''<!DOCTYPE html>
                 <div class="flex-col"><label>Fecha de Envío:</label><input type="date" id="fecha" required></div>
             </div>
             <div class="flex-row">
+                <div class="flex-col"><label>Veces que han regresado el informe:</label><input type="number" id="vecesRegresado" required min="0" value="0"></div>
+            </div>
+        </div>
+
+        <!-- SECCIÓN 3: Vehículo y Verificación de Clinchados -->
+        <div class="section">
+            <h2>3. Vehículo y Verificación de Clinchados</h2>
+            <div class="flex-row">
                 <div class="flex-col">
                     <label>Automóvil Evaluado:</label>
                     <select id="auto" required>
                         <option value="" disabled selected>Selecciona un vehículo</option>
-                        <option value="Jetta">Jetta</option>
-                        <option value="Taos">Taos</option>
                         <option value="Tiguan">Tiguan</option>
                         <option value="Golf">Golf</option>
+                        <option value="Taos">Taos</option>
+                        <option value="Jetta">Jetta</option>
                     </select>
                 </div>
                 <div class="flex-col">
@@ -155,91 +431,23 @@ HTML_CONTENT = f'''<!DOCTYPE html>
                     </select>
                 </div>
             </div>
-            <div class="flex-row">
-                <div class="flex-col"><label>Veces que han regresado el informe:</label><input type="number" id="vecesRegresado" required min="0" value="0"></div>
+
+            <div id="matrizWrapper" class="matriz-wrapper">
+                <div class="instructions">
+                    <strong>Instrucciones:</strong> Todos los clinchados inician <strong>seleccionados (OK)</strong>. Toca únicamente los que presenten falla para <strong>deseleccionarlos (NOK)</strong>.
+                    <div style="margin-top: 8px;">
+                        <span style="display:inline-block; padding: 2px 10px; background: #1F2F57; color: #FDFAF9; border-radius: 12px; font-size: 0.85em;">✓ Seleccionado (OK)</span>
+                        <span style="display:inline-block; padding: 2px 10px; margin-left: 8px; background: #FDFAF9; color: #7A7A7A; border: 2px dashed #A8A8A8; border-radius: 12px; font-size: 0.85em; text-decoration: line-through;">✕ Deseleccionado (NOK)</span>
+                    </div>
+                </div>
+                <div class="status-bar" id="resumenMatriz"></div>
+                <div id="nokContainer"></div>
             </div>
         </div>
 
-        <!-- SECCIÓN 3 -->
+        <!-- SECCIÓN 4: Módulos -->
         <div class="section">
-            <h2>3. Resumen de Puntos de Clinchado</h2>
-            <div class="flex-row">
-                <div class="flex-col"><label>Total de Clinchados Evaluados:</label><input type="number" id="totalClinchados" required min="1" value="10" oninput="calcularTotalesGenerales()"></div>
-                <div class="flex-col"><label>Clinchados NOK (Mal):</label><input type="number" id="nokCount" required min="0" value="0" oninput="calcularTotalesGenerales()"></div>
-                <div class="flex-col"><label>Clinchados COK (Condicionales):</label><input type="number" id="cokCount" required min="0" value="0" oninput="calcularTotalesGenerales()"></div>
-            </div>
-
-            <div class="calc-box">
-                <p>Clinchados OK (Sin errores): <span id="okVal" style="font-size:1.5em; color:#1F2F57;">10</span></p>
-                <p>Total de veces cortado el ensamble: <span id="totalCortesVal" style="font-size:1.2em; color:#1F2F57;">0</span></p>
-                <p>Porcentaje de Efectividad: <span id="porcentajeVal" style="font-size:1.2em; color:#1F2F57;">100.0%</span></p>
-            </div>
-        </div>
-
-        <!-- SECCIÓN 4 (Matriz o Paneles Manuales) -->
-        <div class="section" id="sec4Container" style="display: none;">
-            <h2>4. Verificado de Clinchados</h2>
-            <div id="nokContainer"></div>
-        </div>
-
-        <!-- SECCIÓN 5 -->
-        <div class="section visual-panel">
-            <h2>5. Verificación visual de clinchados</h2>
-            <div class="flex-row">
-                <div class="flex-col">
-                    <label>1. Punto de unión existente:</label>
-                    <select id="v_punto_union">
-                        <option>Inexistente (NOK)</option>
-                        <option selected>Existente (OK)</option>
-                    </select>
-                </div>
-                <div class="flex-col">
-                    <label>2. Posición: 
-                        {f'<img src="{img_posicion_base64}" class="ref-img">' if img_posicion_base64 else '<small style="color:#1F2F57;">[Falta imagen]</small>'}
-                    </label>
-                    <select id="v_posicion">
-                        <option>Desviación de posición mayor que la especificación (NOK)</option>
-                        <option selected>Según dibujo (OK)</option>
-                    </select>
-                </div>
-            </div>
-            <div class="flex-row">
-                <div class="flex-col">
-                    <label>3. Cuello agrietado:</label>
-                    <select id="v_cuello">
-                        <option>Existente (NOK)</option>
-                        <option selected>Inexistente (OK)</option>
-                    </select>
-                </div>
-                <div class="flex-col">
-                    <label>4. Ruptura de materiales:</label>
-                    <select id="v_ruptura">
-                        <option>Existente (NOK)</option>
-                        <option selected>Inexistente (OK)</option>
-                    </select>
-                </div>
-            </div>
-            <div class="flex-row">
-                <div class="flex-col">
-                    <label>5. Grietas en el Cuello (Interior):</label>
-                    <select id="v_grietas_int">
-                        <option>Existente (NOK)</option>
-                        <option selected>Inexistente (OK)</option>
-                    </select>
-                </div>
-                <div class="flex-col">
-                    <label>6. Muescas:</label>
-                    <select id="v_muescas">
-                        <option>La muesca se encuentra descentrada y tiene forma irregular (NOK)</option>
-                        <option selected>La muesca está centrada y es distinguible (OK)</option>
-                    </select>
-                </div>
-            </div>
-        </div>
-
-        <!-- SECCIÓN 6 -->
-        <div class="section">
-            <h2>6. Módulos</h2>
+            <h2>4. Módulos</h2>
             <div class="flex-row">
                 <div class="flex-col">
                     <label>¿El punzón cumple con sus funciones?</label>
@@ -266,78 +474,44 @@ HTML_CONTENT = f'''<!DOCTYPE html>
 <script>
     document.getElementById('fecha').valueAsDate = new Date();
 
-    const partesPorVehiculo = {{
-        "Jetta": ["Tapa trasera", "Tapa delantera"],
-        "Taos": ["Tapa trasera", "Tapa delantera"],
-        "Tiguan": ["Tapa trasera", "Tapa delantera", "Salpicadera izquierda", "Salpicadera derecha"],
-        "Golf": ["Tapa trasera", "Tapa delantera"]
-    }};
-
-    const matrizTiguanTapaTrasera = {{
-        "Refuerzo de bisagra derecha": ["P0002-B-1330-100", "P0002-B-1330-200", "P0002-B-1330-300", "P0002-B-1330-400", "P0002-B-1330-500", "P0002-B-1330-600", "P0002-B-1330-700"],
-        "Refuerzo de bisagra izquierda": ["P0001-A-1330-100", "P0001-A-1330-200", "P0001-A-1330-300", "P0001-A-1330-400", "P0001-A-1330-500", "P0001-A-1330-600", "P0001-A-1330-700"],
-        "Chapa de cierre": ["P0005-E-1330-100", "P0005-E-1330-200", "P0005-E-1330-300", "P0005-E-1330-400", "P0005-E-1330-500", "P0005-E-1330-700", "P0005-E-1330-800", "P0005-E-1330-900", "P0005-E-1330-1000", "P0005-E-1330-1100", "P0005-E-1330-1200", "P0005-E-1330-1300", "P0005-E-1330-1400"],
-        "Refuerzo lateral derecho": ["P0004-D-1330-100", "P0004-D-1330-200", "P0004-D-1330-300", "P0004-D-1330-400", "P0004-D-1330-600", "P0004-D-1330-700", "P0004-D-1330-800", "P0004-D-1330-900", "P0004-D-1330-1000", "P0004-D-1330-1100"],
-        "Refuerzo lateral izquierdo": ["P0003-C-1330-100", "P0003-C-1330-200", "P0003-C-1330-300", "P0003-C-1330-400", "P0003-C-1330-600", "P0003-C-1330-700", "P0003-C-1330-800", "P0003-C-1330-900", "P0003-C-1330-1000", "P0003-C-1330-1100"],
-        "Calavera izquierda": ["P001-A-1330-100", "P001-A-1330-200", "P001-A-1330-300", "P001-A-1330-400", "P001-A-1330-500", "P001-A-1330-600", "P001-A-1330-700", "P001-A-1330-800", "P001-A-1330-900"],
-        "Calavera derecha": ["P002-B-1330-100", "P002-B-1330-200", "P002-B-1330-300", "P002-B-1330-400", "P002-B-1330-500", "P002-B-1330-600", "P002-B-1330-700", "P002-B-1330-800", "P002-B-1330-900"]
-    }};
-
-    let modoMatrizActivo = false;
+    const matricesPorVehiculo = {MATRICES_JSON};
 
     document.getElementById('auto').addEventListener('change', function() {{
         const parteSelect = document.getElementById('parte');
-        parteSelect.innerHTML = '<option value="" disabled selected>Selecciona la parte de carrocería</option>';
+        parteSelect.innerHTML = '';
         const auto = this.value;
-        if(partesPorVehiculo[auto]) {{
-            partesPorVehiculo[auto].forEach(parte => {{
+        
+        if (matricesPorVehiculo[auto]) {{
+            Object.keys(matricesPorVehiculo[auto]).forEach(parte => {{
                 parteSelect.appendChild(new Option(parte, parte));
             }});
+            parteSelect.selectedIndex = 0;
+            renderizarMatriz();
+        }} else {{
+            parteSelect.innerHTML = '<option value="" disabled selected>Primero selecciona un vehículo</option>';
+            document.getElementById('matrizWrapper').style.display = 'none';
+            document.getElementById('nokContainer').innerHTML = '';
         }}
-        evaluarModoInterfaz();
     }});
 
-    document.getElementById('parte').addEventListener('change', evaluarModoInterfaz);
-    document.getElementById('vecesRegresado').addEventListener('input', calcularTotalesGenerales);
-    document.getElementById('cokCount').addEventListener('input', calcularTotalesGenerales);
-    document.getElementById('nokCount').addEventListener('input', calcularTotalesGenerales);
-    document.getElementById('totalClinchados').addEventListener('input', calcularTotalesGenerales);
+    document.getElementById('parte').addEventListener('change', renderizarMatriz);
 
-    function evaluarModoInterfaz() {{
+    function renderizarMatriz() {{
         const auto = document.getElementById('auto').value;
         const parte = document.getElementById('parte').value;
-        
-        const sec4 = document.getElementById('sec4Container');
+        const wrapper = document.getElementById('matrizWrapper');
         const container = document.getElementById('nokContainer');
-        container.innerHTML = '';
-        
-        if (auto === "Tiguan" && parte === "Tapa trasera") {{
-            modoMatrizActivo = true;
-            sec4.style.display = 'block';
-            document.getElementById('totalClinchados').readOnly = true;
-            document.getElementById('nokCount').readOnly = true;
-            document.getElementById('cokCount').readOnly = true;
-            renderizarMatrizInteractiva(container);
-        }} else {{
-            modoMatrizActivo = false;
-            sec4.style.display = 'none';
-            document.getElementById('totalClinchados').readOnly = false;
-            document.getElementById('nokCount').readOnly = false;
-            document.getElementById('cokCount').readOnly = false;
-            calcularTotalesGenerales();
-        }}
-    }}
 
-    function renderizarMatrizInteractiva(container) {{
+        if (!auto || !parte || !matricesPorVehiculo[auto] || !matricesPorVehiculo[auto][parte]) {{
+            wrapper.style.display = 'none';
+            container.innerHTML = '';
+            return;
+        }}
+
+        const estructura = matricesPorVehiculo[auto][parte];
+        wrapper.style.display = 'block';
+
         let htmlMatriz = `
-            <div class="instructions" style="background-color: #FDFAF9;">
-                <strong>Instrucciones:</strong> Toca los botones correspondientes a los IDs para marcar los errores encontrados.
-                <div style="margin-top: 8px;">
-                    <span style="display:inline-block; padding: 2px 10px; border: 2px solid #A8A8A8; border-radius: 12px; font-size: 0.85em;">⚪ OK</span>
-                    <span style="display:inline-block; padding: 2px 10px; margin-left: 8px; background: #1F2F57; color: white; border-radius: 12px; font-size: 0.85em;">🔵 NOK (Mal)</span>
-                    <span style="display:inline-block; padding: 2px 10px; margin-left: 8px; background: #6091C3; color: white; border-radius: 12px; font-size: 0.85em;">🟦 COK (Condicionado)</span>
-                </div>
-            </div>
             <table class="grid-table">
                 <thead>
                     <tr>
@@ -347,13 +521,10 @@ HTML_CONTENT = f'''<!DOCTYPE html>
                 </thead>
                 <tbody>
         `;
-        
-        let totalPuntos = 0;
 
-        for (const [subparte, ids] of Object.entries(matrizTiguanTapaTrasera)) {{
-            totalPuntos += ids.length;
+        for (const [subparte, ids] of Object.entries(estructura)) {{
             const botones = ids.map(id => `
-                <button type="button" class="id-btn status-ok" data-subparte="${{subparte}}" data-id="${{id}}">${{id}}</button>
+                <button type="button" class="id-btn selected" data-subparte="${{subparte}}" data-id="${{id}}">✓ ${{id}}</button>
             `).join('');
 
             htmlMatriz += `
@@ -363,109 +534,42 @@ HTML_CONTENT = f'''<!DOCTYPE html>
                 </tr>
             `;
         }}
-        
+
         htmlMatriz += `</tbody></table>`;
         container.innerHTML = htmlMatriz;
 
-        document.getElementById('totalClinchados').value = totalPuntos;
-
-        const btns = container.querySelectorAll('.id-btn');
-        btns.forEach(btn => {{
+        container.querySelectorAll('.id-btn').forEach(btn => {{
             btn.addEventListener('click', function() {{
-                if (this.classList.contains('status-ok')) {{
-                    this.classList.remove('status-ok');
-                    this.classList.add('status-nok'); 
-                }} else if (this.classList.contains('status-nok')) {{
-                    this.classList.remove('status-nok');
-                    this.classList.add('status-cok'); 
+                const idText = this.getAttribute('data-id');
+                if (this.classList.contains('selected')) {{
+                    this.classList.remove('selected');
+                    this.classList.add('deselected');
+                    this.textContent = `✕ ${{idText}}`;
                 }} else {{
-                    this.classList.remove('status-cok');
-                    this.classList.add('status-ok'); 
+                    this.classList.remove('deselected');
+                    this.classList.add('selected');
+                    this.textContent = `✓ ${{idText}}`;
                 }}
-                actualizarConteoDesdeMatriz();
+                actualizarContador();
             }});
         }});
-        
-        actualizarConteoDesdeMatriz();
-    }}
 
-    function actualizarConteoDesdeMatriz() {{
-        const nokBtns = document.querySelectorAll('.id-btn.status-nok').length;
-        const cokBtns = document.querySelectorAll('.id-btn.status-cok').length;
-        
-        document.getElementById('nokCount').value = nokBtns;
-        document.getElementById('cokCount').value = cokBtns;
-        
-        calcularTotalesGenerales();
-    }}
-
-    function calcularTotalesGenerales() {{
-        const total = parseInt(document.getElementById('totalClinchados').value) || 0;
-        const nok = parseInt(document.getElementById('nokCount').value) || 0;
-        const cok = parseInt(document.getElementById('cokCount').value) || 0;
-        const regresos = parseInt(document.getElementById('vecesRegresado').value) || 0;
-        
-        const ok = total - nok - cok;
-        document.getElementById('okVal').innerText = ok;
-        document.getElementById('totalCortesVal').innerText = regresos;
-
-        let porcentaje = 100;
-        if (total > 0) {{ porcentaje = (ok / total) * 100; }} else {{ porcentaje = 0; }}
-        
-        document.getElementById('porcentajeVal').innerText = porcentaje.toFixed(1) + '%';
-        
-        if (!modoMatrizActivo) {{ generarPanelesManuales(nok, cok); }}
-        
+        actualizarContador();
         document.getElementById('feedbackContainer').style.display = 'none';
     }}
 
-    function generarPanelesManuales(cantidadNOK, cantidadCOK) {{
-        const sec4 = document.getElementById('sec4Container');
-        const container = document.getElementById('nokContainer');
-        container.innerHTML = '';
-        
-        const totalPaneles = cantidadNOK + cantidadCOK;
-        
-        if(totalPaneles > 0) {{
-            sec4.style.display = 'block';
-            for(let i = 1; i <= cantidadNOK; i++) {{
-                const panel = document.createElement('div');
-                panel.className = 'nok-panel flex-row';
-                panel.style.backgroundColor = '#A8A8A8'; 
-                panel.style.borderColor = '#1F2F57';
-                panel.innerHTML = `
-                    <div class="flex-col">
-                        <label style="color:#1F2F57;">ID Pieza Evaluada #${{i}} (Mal - NOK):</label>
-                        <input type="text" class="manual-id-parte" required placeholder="Ingresar ID">
-                    </div>
-                    <div class="flex-col">
-                        <label style="color:#1F2F57;">Estado Asignado:</label>
-                        <input type="text" class="manual-estado" value="Mal (NOK)" readonly style="background-color: transparent; border: none; font-weight: bold; color: #1F2F57;">
-                    </div>
-                `;
-                container.appendChild(panel);
-            }}
+    function actualizarContador() {{
+        const ok = document.querySelectorAll('.id-btn.selected').length;
+        const nok = document.querySelectorAll('.id-btn.deselected').length;
+        const total = ok + nok;
+        const efectividad = total > 0 ? ((ok / total) * 100).toFixed(1) : '0.0';
 
-            for(let i = 1; i <= cantidadCOK; i++) {{
-                const panel = document.createElement('div');
-                panel.className = 'nok-panel flex-row';
-                panel.style.backgroundColor = '#FDFAF9'; 
-                panel.style.borderColor = '#6091C3';
-                panel.innerHTML = `
-                    <div class="flex-col">
-                        <label style="color:#1F2F57;">ID Pieza Evaluada #${{cantidadNOK + i}} (Condicionado - COK):</label>
-                        <input type="text" class="manual-id-parte" required placeholder="Ingresar ID">
-                    </div>
-                    <div class="flex-col">
-                        <label style="color:#1F2F57;">Estado Asignado:</label>
-                        <input type="text" class="manual-estado" value="Condicionado (COK)" readonly style="background-color: transparent; border: none; font-weight: bold; color: #1F2F57;">
-                    </div>
-                `;
-                container.appendChild(panel);
-            }}
-        }} else {{
-            sec4.style.display = 'none';
-        }}
+        document.getElementById('resumenMatriz').innerHTML = `
+            <span>Total evaluados: ${{total}}</span>
+            <span>OK (Seleccionados): ${{ok}}</span>
+            <span>NOK (Deseleccionados): ${{nok}}</span>
+            <span>Efectividad: ${{efectividad}}%</span>
+        `;
     }}
 
     document.getElementById('clinchadoForm').addEventListener('submit', async function(e) {{
@@ -483,6 +587,25 @@ HTML_CONTENT = f'''<!DOCTYPE html>
             return;
         }}
 
+        const okBtns = document.querySelectorAll('.id-btn.selected');
+        const nokBtns = document.querySelectorAll('.id-btn.deselected');
+        const totalClinchados = okBtns.length + nokBtns.length;
+
+        if (totalClinchados === 0) {{
+            alert("⚠️ Por favor, selecciona un vehículo y parte de carrocería.");
+            return;
+        }}
+
+        const piezasMalas = [];
+        nokBtns.forEach(btn => {{
+            piezasMalas.push({{
+                nombre: `${{btn.getAttribute('data-subparte')}} (${{btn.getAttribute('data-id')}})`,
+                estado: "Mal (NOK)"
+            }});
+        }});
+
+        const porcentaje = ((okBtns.length / totalClinchados) * 100).toFixed(1) + '%';
+
         const btn = document.getElementById('btnSubmit');
         btn.innerText = 'GENERANDO PDF Y ENVIANDO...';
         btn.disabled = true;
@@ -494,18 +617,11 @@ HTML_CONTENT = f'''<!DOCTYPE html>
             auto: document.getElementById('auto').value,
             parte: document.getElementById('parte').value,
             vecesRegresado: document.getElementById('vecesRegresado').value,
-            totalClinchados: document.getElementById('totalClinchados').value,
-            nokCount: document.getElementById('nokCount').value,
-            cokCount: document.getElementById('cokCount').value,
-            okCount: document.getElementById('okVal').innerText,
-            porcentaje: document.getElementById('porcentajeVal').innerText,
-            
-            v_punto_union: document.getElementById('v_punto_union').value,
-            v_posicion: document.getElementById('v_posicion').value,
-            v_cuello: document.getElementById('v_cuello').value,
-            v_ruptura: document.getElementById('v_ruptura').value,
-            v_grietas_int: document.getElementById('v_grietas_int').value,
-            v_muescas: document.getElementById('v_muescas').value,
+            totalClinchados: totalClinchados,
+            okCount: okBtns.length,
+            nokCount: nokBtns.length,
+            porcentaje: porcentaje,
+            piezasMalas: piezasMalas,
             mod_punzon: document.getElementById('mod_punzon').value,
             mod_matriz: document.getElementById('mod_matriz').value
         }};
@@ -523,7 +639,9 @@ HTML_CONTENT = f'''<!DOCTYPE html>
                 
                 document.getElementById('clinchadoForm').reset();
                 document.getElementById('fecha').valueAsDate = new Date();
-                evaluarModoInterfaz(); 
+                document.getElementById('parte').innerHTML = '<option value="" disabled selected>Primero selecciona un vehículo</option>';
+                document.getElementById('matrizWrapper').style.display = 'none';
+                document.getElementById('nokContainer').innerHTML = '';
             }} else {{ alert('❌ Error: ' + result.error); }}
         }} catch (error) {{ alert('❌ Error de conexión.'); }}
         btn.innerText = 'GENERAR Y ENVIAR REPORTE PDF';
@@ -550,24 +668,17 @@ class ClinchadoHandler(http.server.SimpleHTTPRequestHandler):
             data = json.loads(self.rfile.read(length).decode('utf-8'))
 
             fallo_modulo = data['mod_punzon'] == 'No' or data['mod_matriz'] == 'No'
-            fallo_visual = ('NOK' in data['v_punto_union'] or 
-                            'NOK' in data['v_posicion'] or 
-                            'NOK' in data['v_cuello'] or 
-                            'NOK' in data['v_ruptura'] or 
-                            'NOK' in data['v_grietas_int'] or
-                            'NOK' in data['v_muescas'])
-                            
             nok_count = int(data.get('nokCount', 0))
 
-            if fallo_modulo or fallo_visual:
+            if fallo_modulo:
                 dictamen = "DESGASTE CRÍTICO / FUERA DE TOLERANCIA (CAMBIAR MATRIZ)"
-                bg_color = "#FADBD8"
+                bg_color = "#D6DCE5"
             elif nok_count > 0:
                 dictamen = "DESGASTE INICIAL / PRECAUCIÓN (Aumentar frecuencia de inspección)"
-                bg_color = "#FCF3CF"
+                bg_color = "#E8EEF5"
             else:
                 dictamen = "CONDICIÓN ÓPTIMA / ACEPTABLE (Continuar Proceso)"
-                bg_color = "#D4EFDF"
+                bg_color = "#F0F4F8"
 
             try:
                 self.enviar_email(data, dictamen, bg_color)
@@ -586,25 +697,25 @@ class ClinchadoHandler(http.server.SimpleHTTPRequestHandler):
                 self.wfile.write(json.dumps({"error": str(e)}).encode('utf-8'))
     
     def enviar_email(self, data, dictamen, bg_color):
-        
         API_KEY = os.environ.get("BREVO_API_KEY")
-        SENDER_EMAIL = "coreenvi399@gmail.com"
+        SENDER_EMAIL = "hola110@gmail.com"
         
         lista_supervisores = data.get('supervisores', [])
         if not lista_supervisores:
             raise Exception("No se especificaron destinatarios.")
             
         to_payload = [{"email": email} for email in lista_supervisores]
-        
-        visual_vars = [data.get('v_punto_union',''), data.get('v_posicion',''), data.get('v_cuello',''), 
-                       data.get('v_ruptura',''), data.get('v_grietas_int',''), data.get('v_muescas','')]
-        visual_ok = sum(1 for v in visual_vars if '(OK)' in v)
 
-        medios_vars = [data.get('mod_punzon',''), data.get('mod_matriz','')]
+        medios_vars = [data.get('mod_punzon', ''), data.get('mod_matriz', '')]
         medios_ok = sum(1 for v in medios_vars if v == 'Si')
 
-        # === CONSTRUCCIÓN DEL PDF CON TAMAÑOS AJUSTADOS ===
-        # Modifiqué el ancho de la imagen de 250px a 160px y los márgenes para compactarlo
+        piezas_malas = data.get('piezasMalas', [])
+        if piezas_malas:
+            lista_nok_str = ", ".join([p['nombre'] for p in piezas_malas])
+            fila_nok_html = f'<tr><td class="bg-light">Puntos NOK detectados:</td><td>{lista_nok_str}</td></tr>'
+        else:
+            fila_nok_html = '<tr><td class="bg-light">Puntos NOK detectados:</td><td>Ninguno</td></tr>'
+
         pdf_logo_html = f'<div style="text-align: center; margin-bottom: 10px;"><img src="{img_pdf_base64}" style="width: 160px; height: auto;" /></div>' if img_pdf_base64 else ''
 
         pdf_html = f'''
@@ -638,13 +749,12 @@ class ClinchadoHandler(http.server.SimpleHTTPRequestHandler):
             <h3>2. Resumen de Puntos de Clinchados</h3>
             <table>
                 <tr>
-                    <th>Total Evaluados</th><th>OK</th><th>COK</th><th>NOK</th><th>Efectividad</th>
+                    <th>Total Evaluados</th><th>OK</th><th>NOK</th><th>Efectividad</th>
                 </tr>
                 <tr style="text-align: center;">
                     <td>{data['totalClinchados']}</td>
                     <td>{data['okCount']}</td>
-                    <td>{data['cokCount']}</td>
-                    <td style="color: red; font-weight: bold;">{data['nokCount']}</td>
+                    <td style="font-weight: bold;">{data['nokCount']}</td>
                     <td>{data['porcentaje']}</td>
                 </tr>
             </table>
@@ -652,8 +762,8 @@ class ClinchadoHandler(http.server.SimpleHTTPRequestHandler):
             <h3>3. Resumen de Inspecciones</h3>
             <table>
                 <tr><td class="bg-light">Medición:</td><td>{data['totalClinchados']}</td></tr>
-                <tr><td class="bg-light">Inspección visual:</td><td>{visual_ok} / 6</td></tr>
                 <tr><td class="bg-light">Inspección de medios:</td><td>{medios_ok} / 2</td></tr>
+                {fila_nok_html}
             </table>
 
             <div class="dictamen">
